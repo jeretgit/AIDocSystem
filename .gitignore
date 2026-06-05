@@ -54,3 +54,6 @@ out/
 # 操作系统忽略名单
 .DS_Store
 Thumbs.db
+
+# 忽略本地点火脚本
+run-local.ps1
