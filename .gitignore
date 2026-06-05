@@ -1,0 +1,56 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Uploaded files ###
+uploads/*
+!uploads/.gitkeep
+
+# 后端忽略名单
+target/
+*.jar
+.idea/
+*.iml
+
+# 前端忽略名单
+node_modules/
+.next/
+out/
+.env*
+
+# 操作系统忽略名单
+.DS_Store
+Thumbs.db
