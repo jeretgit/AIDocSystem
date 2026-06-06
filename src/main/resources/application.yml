@@ -33,5 +33,5 @@ app:
     dir: uploads
 
 ai:
-  api-key: ${DEEPSEEK_API_KEY:sk-this-is-a-fake-key-do-not-use}"
+  api-key: ${DEEPSEEK_API_KEY:sk-this-is-a-fake-key-do-not-use}
   api-url: "https://api.deepseek.com/chat/completions"
