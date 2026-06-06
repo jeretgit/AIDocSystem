@@ -53,7 +53,7 @@ export default function Home() {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://localhost:8080/api/documents/upload', {
+      const response = await fetch('http://49.51.244.170:8080/api/documents/upload', {
         method: 'POST',
         body: formData,
       });
@@ -66,7 +66,7 @@ export default function Home() {
         // Start polling
         const pollInterval = setInterval(async () => {
           try {
-            const statusResponse = await fetch(`http://localhost:8080/api/documents/${docId}`);
+            const statusResponse = await fetch(`http://49.51.244.170:8080/api/documents/${docId}`);
             if (statusResponse.ok) {
               const statusData = await statusResponse.json();
               const document = statusData.data;
