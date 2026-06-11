@@ -36,6 +36,9 @@ public class DocumentInfo {
     @Column(name = "storage_path", length = 512)
     private String storagePath;
 
+    @Column(name = "file_content", columnDefinition = "LONGBLOB")
+    private byte[] fileContent;
+
     @Column(name = "process_status")
     private Integer processStatus;
 

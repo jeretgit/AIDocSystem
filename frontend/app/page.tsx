@@ -54,6 +54,7 @@ export default function Home() {
 
     try {
       const response = await fetch('http://49.51.244.170:8080/api/documents/upload', {
+        // const response = await fetch('http://localhost:8080/api/documents/upload', {
         method: 'POST',
         body: formData,
       });
@@ -67,6 +68,7 @@ export default function Home() {
         const pollInterval = setInterval(async () => {
           try {
             const statusResponse = await fetch(`http://49.51.244.170:8080/api/documents/${docId}`);
+            // const statusResponse = await fetch(`http://localhost:8080/api/documents/${docId}`);
             if (statusResponse.ok) {
               const statusData = await statusResponse.json();
               const document = statusData.data;
@@ -79,7 +81,7 @@ export default function Home() {
               } else if (document.processStatus === 3) {
                 // Failed
                 clearInterval(pollInterval);
-                setError('文档解析失败');
+                setError(document.globalSummary || '文档解析失败');
                 setLoading(false);
               }
               // processStatus 0 or 1: continue polling
@@ -101,7 +103,9 @@ export default function Home() {
           }
         }, 300000);
       } else {
-        alert('上传失败，请重试');
+        const errorData = await response.json();
+        const errorMessage = errorData.message || '上传失败，请重试';
+        setError(errorMessage);
         setLoading(false);
       }
     } catch (error) {

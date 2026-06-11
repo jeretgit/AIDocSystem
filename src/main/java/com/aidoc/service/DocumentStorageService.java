@@ -46,6 +46,9 @@ public class DocumentStorageService {
             throw new IllegalArgumentException("非法的文件路径");
         }
 
+        // Read file into byte[] to avoid stream consumption issues
+        byte[] fileContent = file.getBytes();
+
         try (InputStream inputStream = file.getInputStream()) {
             Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
         }
@@ -54,6 +57,7 @@ public class DocumentStorageService {
                 .fileName(originalFileName)
                 .fileSize(file.getSize())
                 .storagePath(targetPath.toAbsolutePath().toString())
+                .fileContent(fileContent)
                 .processStatus(PROCESS_STATUS_UPLOADED)
                 .build();
 
