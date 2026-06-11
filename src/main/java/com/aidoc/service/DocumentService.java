@@ -7,14 +7,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,9 +31,11 @@ public class DocumentService {
     private static final int PROCESS_STATUS_SUMMARY_COMPLETED = 2;
     private static final int PROCESS_STATUS_PARSE_FAILED = 3;
     private static final int TEXT_PREVIEW_LENGTH = 500;
+    private static final Duration CACHE_EXPIRY = Duration.ofDays(7);
 
     private final DocumentInfoRepository documentInfoRepository;
     private final AiService aiService;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Async
     public void processDocument(Long documentId) {
@@ -37,6 +43,26 @@ public class DocumentService {
             DocumentInfo document = documentInfoRepository.findById(documentId)
                     .orElseThrow(() -> new IllegalArgumentException("文档不存在, id=" + documentId));
 
+            // Calculate MD5 of the PDF file
+            String md5 = calculateFileMd5(document.getStoragePath());
+            String cacheKey = "doc:summary:" + md5;
+
+            // Check Redis cache
+            String cachedSummary = stringRedisTemplate.opsForValue().get(cacheKey);
+            if (cachedSummary != null) {
+                System.out.println("=== 命中 Redis 缓存！ ===");
+                System.out.println("=== AI 总结结果 ===");
+                System.out.println(cachedSummary);
+                
+                document.setGlobalSummary(cachedSummary);
+                document.setProcessStatus(PROCESS_STATUS_SUMMARY_COMPLETED);
+                documentInfoRepository.save(document);
+                System.out.println("=== 文档 ID: " + documentId + " 全链路处理彻底完成，数据已落盘 ===");
+                log.info("PDF 解析完成 (缓存命中), documentId={}", documentId);
+                return;
+            }
+
+            // Cache miss - process normally
             String extractedText = extractTextFromPdf(document.getStoragePath());
             printTextPreview(documentId, extractedText);
 
@@ -55,6 +81,9 @@ public class DocumentService {
                 String summary = aiService.summarizeChunk(textForSummary);
                 System.out.println("=== AI 总结结果 ===");
                 System.out.println(summary);
+                
+                // Cache the result in Redis with 7-day expiry
+                stringRedisTemplate.opsForValue().set(cacheKey, summary, CACHE_EXPIRY);
                 
                 document.setGlobalSummary(summary);
                 document.setProcessStatus(PROCESS_STATUS_SUMMARY_COMPLETED);
@@ -114,5 +143,12 @@ public class DocumentService {
         }
         
         return chunks;
+    }
+
+    private String calculateFileMd5(String filePath) throws IOException {
+        Path path = Paths.get(filePath).normalize();
+        try (FileInputStream fis = new FileInputStream(path.toFile())) {
+            return DigestUtils.md5DigestAsHex(fis);
+        }
     }
 }
